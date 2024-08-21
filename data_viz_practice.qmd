@@ -1,8 +1,10 @@
 ---
 title: "EDS 221: day 8 interactive"
 format: html
+editor_options: 
+  chunk_output_type: console
 ---
-
+# load packages
 ```{r}
 # General use packages:
 library(tidyverse)
@@ -23,4 +25,142 @@ library(gapminder)
 # Spatial
 library(sf)
 ```
+
+# read in data
+```{r}
+lizards <- read_csv(here("data_tidy", "lizards.csv"))
+```
+
+# plots
+```{r}
+# ggplot essential pieces (data, aes(what to plot), type of graph), 3 ways (that do the same thing):
+
+# like this
+ggplot(data = lizards, aes(x = total_length, y = weight)) +  # defined the data and aestetics for the entire plot
+  geom_point()
+
+# or like this
+ggplot(data = lizards) +  # defined the data for the plot
+  geom_point(aes(x = total_length, y = weight))  # and define aesthetics for each line independently
+
+# or like this!
+ggplot() +   # what you put in here will be applied to your entire graphic 
+  geom_point(data = lizards, aes(x = total_length, y = weight))   # what you put in here is applied just to this layer. this syntax here where data is defined within the geometry is great for stuff like mapping
+
+```
+
+```{r}
+# some graph types only need one variable
+ggplot(data = lizards, aes(x = total_length)) +
+  geom_histogram()
+```
+
+```{r}
+# the type of data you are plotting will direct you to the appropriate graph type
+#ex: jitter plot: one continuous and one categorical variable
+ggplot(data = lizards, aes(y = common_name, x = weight)) +
+  geom_jitter()
+```
+
+```{r}
+# To change aesthetics of a graph based on a constant (e.g. “Make all the points BLUE”), we can add the information directly to the relevant geom_ layer
+ggplot(data = lizards, aes(x = weight)) +
+  geom_histogram(color = "orange",   # color is the outline
+                 fill = "purple",   # fill is the well... fill lol
+                 linewidth = 2,   # how wide the outline of the bar is
+                 linetype = "dotted") 
+```
+
+```{r}
+ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point(color = "#606c38", # got these codes from coolors.co
+             fill = "#dda15e",
+             shape = 22,   # found online, point types have assigned numbers
+             size = 3,  # size of the individual points
+             alpha = 0.4)  # alpha for transparency (0 to 1, 1 being all color)
+```
+
+```{r}
+ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point(aes(color = common_name,  # anything put within aes() is going to change                                               based on a variable
+                 size = total_length),
+             alpha = 0.5) +     # everything outside of aes() will not 
+  scale_color_discrete(type = c("#ae2012",    # this is getting pretty advanced
+                                  "#e6ccb2",
+                                  "#e6ccb2",
+                                  "#e6ccb2",
+                                  "#e6ccb2",
+                                  "#e6ccb2",
+                                  "#e6ccb2"))
+
+```
+
+```{r}
+ggplot(data = lizards, aes(x = site, y = weight)) +
+  geom_jitter(aes(color = common_name)) +
+  theme_light()
+```
+
+```{r}
+ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point() +
+  labs(x = "Total length (mm)",
+       y = "Weight (g)",
+       title = "Lizard size")
+```
+
+```{r}
+# Faceting to make multiple panels at once. Sometimes it’s useful to split up information!
+ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point() +
+  facet_wrap(~common_name, ncol = 3, scales = "free") +   # give one faceting variable, panels get wrapped into a grid. scales = "free" allows each panel to have their own scale
+  labs(x = "Total length (mm)",
+       y = "Weight (g)")
+```
+
+```{r}
+ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point() +
+  facet_grid(sex ~ tail)   # when you have multiple faceting variables
+```
+
+```{r}
+lizards_counts <- lizards |>
+  count(common_name)
+
+# ggplot loves to put things in alphabetical order (where a = 0), but is rarely the order we want. o we use factor reorder (fct_reorder)
+ggplot(data = lizards_counts, aes(y = fct_reorder(common_name, n), x = n)) +
+  geom_col()   # bar chart
+```
+
+```{r}
+# one mega example
+ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point(aes(color = common_name),
+             size = 2) +
+  theme_minimal() +
+  labs(x = "Total length (mm)",
+       y = "Weight (g)",
+       color = "Lizard species",
+       title = "Lizard size") +
+  facet_wrap(~common_name, scales = "free")
+```
+
+```{r}
+#one more example, make a stacked column graph of lizard species by site:
+ggplot(data = lizards, aes(y = fct_infreq(common_name))) +
+  geom_bar(aes(fill = site)) +  # geom_bar doesnt need a x bc it puts count on the x axis
+  theme_minimal() +
+  labs(x = "Lizard counts",
+       y = "Species (common name)") +
+  facet_grid(sex ~ tail)
+```
+
+
+
+
+
+
+
+
 
